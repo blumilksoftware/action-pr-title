@@ -1,36 +1,60 @@
-# Branch naming rules
-<img alt="GitHub Actions status" src="https://github.com/deepakputhraya/action-pr-title/workflows/main/badge.svg">
+# PR title rules action
 
 Github action to enforce Pull Request title conventions
 
 ## Usage
 
-See [action.yml](./action.yml)
+Default usage:
 
 ```yaml
 steps:
-- uses: deepakputhraya/action-pr-title@master
-  with:
-    regex: '^(#\d+ )?- .+' # Regex the title should match. By default, expects title to start with issue number, like: "#23 - title" or a dash, like: "- title"
-    allowed_prefixes: 'feature,fix,JIRA' # title should start with the given prefix, empty by default
-    disallowed_prefixes: 'feat/,hotfix' # title should not start with the given prefix, empty by default
-    prefix_case_sensitive: false # title prefix are case insensitive. Default: false
-    min_length: 5 # Min length of the title. Default: 1
-    max_length: 20 # Max length of the title. Default: -1
-    github_token: ${{ github.token }} # Default: ${{ github.token }}
+- uses: blumilksoftware/action-pr-title@master
 ```
 
-### Note:
-Ensure to add `types` to the Pull requests webhook event as by default workflows are triggered only
-for `opened`, `synchronize`, or `reopened` pull request events. Read more about
+This will use default option values and enforce a title formatted as either `#123 - Some title` or `- Some title`.
+
+You can customize the action by overriding default options:
+
+```yaml
+steps:
+- uses: blumilksoftware/action-pr-title@master
+  with:
+    regex: '^(FOO\-\d+ )?- .+'
+```
+
+This will enforce a title formatted as either `FOO-123 - Some title` or `- Some title`.
+
+See also [action.yml](./action.yml) for detailed list of options.
+
+### Note
+
+You might want to provide `types` field to the `pull_request` definition as by default workflows are triggered only
+on `opened`, `synchronize`, or `reopened` events. Read more about
 it [here](https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#pull_request).
+
 ```yaml
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened]
+    types: [opened, edited, synchronize, ready_for_review, reopened]
 ```
 
 Triggering the action on anything other than `pull_request` will cause a failure.
 
-## License
-The scripts and documentation in this project are released under the [MIT License](./LICENSE)
+### Example workflow
+
+`.github/workflows/check-pr-title.yml`:
+
+```yaml
+name: Check PR Title
+on:
+  pull_request:
+    branches: [ "main" ]
+    types: [opened, edited, synchronize, ready_for_review, reopened]
+
+jobs:
+  check-pr-title:
+    name: Check PR title
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: blumilksoftware/action-pr-title@v1.2.0
+```
